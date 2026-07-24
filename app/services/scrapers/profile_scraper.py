@@ -20,7 +20,7 @@ from app.utils.web_driver import WebDriverManager
 logger = logging.getLogger(__name__)
 
 
-def get_profile_info(profile_url: str) -> dict:
+def get_profile_info(profile_url: str) -> dict | None:
     """
     Scrapes basic profile information and engagement metrics from a TikTok profile.
 
@@ -37,7 +37,7 @@ def get_profile_info(profile_url: str) -> dict:
     """
     driver = WebDriverManager.get_driver()
 
-    wait_time = random.uniform(8, 12)
+    wait_time = random.uniform(15, 20)
     wait = WebDriverWait(driver, wait_time)
     profile_data = {}
 
@@ -47,14 +47,14 @@ def get_profile_info(profile_url: str) -> dict:
 
         name_element = wait.until(
             EC.presence_of_element_located(
-                (By.CSS_SELECTOR, 'h2[data-e2e="user-subtitle"]')
+                (By.CSS_SELECTOR, 'h1[data-e2e="user-title"]')
             )
         )
         profile_data["profile_name"] = name_element.text
 
         image_element = wait.until(
             EC.presence_of_element_located(
-                (By.CSS_SELECTOR, "img.css-1zpj2q-ImgAvatar")
+                (By.CSS_SELECTOR, '[data-e2e="user-avatar"] img')
             )
         )
         profile_data["profile_picture"] = image_element.get_attribute("src")
@@ -72,16 +72,19 @@ def get_profile_info(profile_url: str) -> dict:
                 (By.CSS_SELECTOR, 'strong[data-e2e="video-views"]')
             )
         )
-        views = [format_metric(element.text) for element in view_elements[3:13]]
+        views = [format_metric(element.text) for element in view_elements[:10]]
         profile_data["average_views"] = sum(views) / len(views) if views else 0
 
         video_elements = wait.until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'a[href*="/video/"]'))
         )
-        video_ids = [
-            video.get_attribute("href").split("/video/")[-1]
-            for video in video_elements[3:13]
-        ]
+        video_ids = []
+        for video in video_elements:
+            video_id = video.get_attribute("href").split("/video/")[-1].split("?")[0]
+            if video_id not in video_ids:
+                video_ids.append(video_id)
+            if len(video_ids) == 10:
+                break
         profile_data["video_ids"] = video_ids
 
     except (TimeoutException, NoSuchElementException) as e:

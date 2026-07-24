@@ -7,7 +7,7 @@ from app.utils.stats import calculate_averages
 
 logger = logging.getLogger(__name__)
 
-def get_influencer_information(username, city:str = "") -> Influencer:
+def get_influencer_information(username, city: str = "") -> Influencer | None:
     """
     Fetches influencer information from TikTok based on the provided username.
 
@@ -30,7 +30,7 @@ def get_influencer_information(username, city:str = "") -> Influencer:
         return None
 
     metrics = {"likes": 0, "comments": 0, "shares": 0, "saves": 0}
-    total_videos = len(profile_data["video_ids"])
+    processed_videos = 0
     featured_videos = []
 
     for video_id in profile_data["video_ids"]:
@@ -44,13 +44,18 @@ def get_influencer_information(username, city:str = "") -> Influencer:
         if not video_data:
             continue
 
+        processed_videos += 1
         for metric in metrics:
             metrics[metric] += video_data[metric]
 
         if len(featured_videos) < 3:
             featured_videos.append(video_id)
 
-    average_metrics = calculate_averages(metrics, total_videos)
+    if processed_videos == 0:
+        logger.warning("No video metrics could be read for @%s", username)
+        return None
+
+    average_metrics = calculate_averages(metrics, processed_videos)
 
     influencer = Influencer(
         username=username,

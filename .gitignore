@@ -1,4 +1,4 @@
-env/
+.venv/
 
 __pycache__/
 *.pyc
@@ -19,5 +19,6 @@ logs/
 venv/
 
 cookies_tiktok.pkl
+.chrome-tiktok-profile/
 
 .ruff_cache/

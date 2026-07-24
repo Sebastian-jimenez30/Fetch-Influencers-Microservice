@@ -33,7 +33,11 @@ def fetch_influencers_by_tag(city) -> None:
 
     influencers = []
     for username in usernames:
+        logger.info("Retrieving profile information for @%s.", username)
         influencer = get_influencer_information(username, city)
+        if influencer is None:
+            logger.warning("Skipping @%s because its profile could not be read.", username)
+            continue
         if influencer.is_significant():
             influencers.append(influencer)
             logger.info(f"Fetched influencer: {username}")

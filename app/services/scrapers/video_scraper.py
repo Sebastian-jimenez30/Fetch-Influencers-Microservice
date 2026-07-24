@@ -13,7 +13,7 @@ from app.utils.web_driver import WebDriverManager
 logger = logging.getLogger(__name__)
 
 
-def get_tiktok_video_data(video_url: str) -> dict:
+def get_tiktok_video_data(video_url: str) -> dict | None:
     """
     Scrapes TikTok to extract likes, comments, shares and saves from a video.
 
@@ -56,12 +56,16 @@ def get_tiktok_video_data(video_url: str) -> dict:
         )
         data["shares"] = format_metric(shares_element.text)
 
-        saves_element = wait.until(
-            EC.presence_of_element_located(
-                (By.CSS_SELECTOR, '[data-e2e="undefined-count"]')
-            )
-        )
-        data["saves"] = format_metric(saves_element.text)
+        data["saves"] = 0
+        for selector in (
+            '[data-e2e="collect-count"]',
+            '[data-e2e="save-count"]',
+            '[data-e2e="undefined-count"]',
+        ):
+            saves_elements = driver.find_elements(By.CSS_SELECTOR, selector)
+            if saves_elements:
+                data["saves"] = format_metric(saves_elements[0].text)
+                break
 
     except (TimeoutException, NoSuchElementException) as e:
         logger.error(f"Error retrieving video data: {e}")
