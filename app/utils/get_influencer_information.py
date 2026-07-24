@@ -66,5 +66,5 @@ def get_influencer_information(username, city:str = "") -> Influencer:
         city=city,
         featured_videos=featured_videos,
     )
-    
+
     return influencer

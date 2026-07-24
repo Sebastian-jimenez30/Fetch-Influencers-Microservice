@@ -33,6 +33,8 @@ class WebDriverManager:
             options = uc.ChromeOptions()
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
+            if os.getenv("CHROME_HEADLESS", "false").lower() == "true":
+                options.add_argument("--headless=new")
             options.add_argument("--lang=es-CO")
             options.add_argument("--incognito")
             options.add_argument("--disable-blink-features=AutomationControlled")
@@ -41,7 +43,12 @@ class WebDriverManager:
             user_agent = ua.random
             options.add_argument(f"user-agent={user_agent}")
 
-            cls._driver = uc.Chrome(options=options, use_subprocess=True)
+            chrome_binary = os.getenv("CHROME_BIN")
+            cls._driver = uc.Chrome(
+                options=options,
+                browser_executable_path=chrome_binary or None,
+                use_subprocess=True,
+            )
 
             cls._driver.execute_script(
                 """

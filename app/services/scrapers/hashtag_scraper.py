@@ -21,7 +21,7 @@ def get_usernames(url_hashtag: str) -> set:
     Returns:
         set: A set of unique usernames found in the videos under the hashtag.
     """
-    
+
     driver = WebDriverManager.get_driver()
     usernames = set()
 

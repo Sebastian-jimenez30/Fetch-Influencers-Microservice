@@ -1,10 +1,11 @@
 import asyncio
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes.routes import router
-from app.utils.web_driver import WebDriverManager
 from app.databases.redis import start_listener
+from app.routes.routes import router
+
 app = FastAPI(title="TikTok Scraper API", version="1.0")
 
 app.include_router(router)
@@ -17,8 +18,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-driver = WebDriverManager.get_driver()
 
 @app.on_event("startup")
 async def startup_event():

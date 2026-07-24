@@ -1,5 +1,6 @@
 import logging
 import random
+
 from app.services.scrapers.hashtag_scraper import get_usernames
 from app.utils.get_influencer_information import get_influencer_information
 
@@ -20,14 +21,8 @@ def fetch_influencers_by_tag(city) -> None:
     tag_url = f"https://www.tiktok.com/search/video?q={city}"
     try:
         temp_usernames = list(get_usernames(tag_url))
-        count_users = 0
-        usernames = []
-
-        while count_users < 5:
-            usernames.append(
-                temp_usernames.pop(random.randint(0, len(temp_usernames) - 1))
-            )
-            count_users += 1
+        sample_size = min(5, len(temp_usernames))
+        usernames = random.sample(temp_usernames, sample_size)
 
     except Exception as e:
         logger.error(f"Error getting usernames: {e}")

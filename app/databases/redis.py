@@ -1,13 +1,16 @@
 import logging
 import os
+
 import redis
-
 from dotenv import load_dotenv
-load_dotenv()
 
+from app.databases.postgres import upsert_influencer
 from app.schemas.influencer import Influencer
 from app.use_cases.fetch_tiktok_data import fetch_influencers_by_tag
 from app.use_cases.update_tiktok_data import update_tiktok_influencer
+
+load_dotenv()
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,6 +23,9 @@ r = redis.Redis(
 
 def add_influencer(influencer: Influencer) -> None:
     """Save an influencer in a queue."""
+    if influencer is None:
+        logger.warning("Skipping an empty influencer result.")
+        return
     influencer_json = influencer.json()
     r.rpush("influencers", influencer_json)
     logger.info(f"Added influencer {influencer.username} to the queue.")
@@ -48,15 +54,18 @@ def start_listener():
                 try:
                     username = params[1]
                     influencer = update_tiktok_influencer(username)
-                    add_influencer(influencer)
+                    if influencer is not None:
+                        upsert_influencer(influencer)
+                        add_influencer(influencer)
                     logger.info(f"Updated influencer: {username}")
                 except Exception as e:
                     logger.error(f"Failed to update {username}: {e}")
             elif action == "fetch_influencers":
                 try:
                     city = params[1]
-                    influencers = fetch_influencers_by_tag(city)
+                    influencers = fetch_influencers_by_tag(city) or []
                     for influencer in influencers:
+                        upsert_influencer(influencer)
                         add_influencer(influencer)
                     logger.info("Fetched and added influencers to the queue.")
                 except Exception as e:
